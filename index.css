@@ -62,3 +62,20 @@ body {
 .game-container__cell_title_32 {
   background-color: rgb(255, 123, 15);
 }
+
+.game-container__cell_title_64 {
+  background-color: rgb(218, 80, 0);
+}
+
+.game-container__cell_title_128 {
+  background-color: rgb(233, 213, 34);
+}
+
+.game-container__cell_title_256 {
+  background-color: rgb(212, 192, 12);
+}
+
+.game-container__cell_title_512 {
+  background-color: rgb(199, 212, 12);
+
+}
