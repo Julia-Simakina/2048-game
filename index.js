@@ -1,8 +1,3 @@
-const BOARD_SIZE = 4;
-const COMMON_NEW_VALUE = 2;
-const RARE_NEW_VALUE = 4;
-const GAMEOVER_TEXT = '=('
-
 const AvailableKeysEnum = {
   ArrowLeft: true,
   ArrowRight: true,
@@ -10,14 +5,53 @@ const AvailableKeysEnum = {
   ArrowDown: true,
 };
 
-const gameField = document.querySelector(".game-container__field");
-const score = document.getElementsByClassName(
-  "game-container__scores-counter"
-)[0];
-let gameMatrix = Array.from({ length: BOARD_SIZE }, () => new Array(BOARD_SIZE).fill(0));
+const checkBoardSize = () => {
+  let boardSizePrompt;
+  do {
+    boardSizePrompt = +prompt("Введите ширину игрового поля от 3 до 8", "4");
+  } while (boardSizePrompt < 3 || boardSizePrompt > 8);
 
-let counter = 0;
-score.textContent = counter;
+  return boardSizePrompt;
+};
+
+const BOARD_SIZE = checkBoardSize();
+
+const COMMON_NEW_VALUE = 2;
+const RARE_NEW_VALUE = 4;
+const GAMEOVER_TEXT = "Конец игры!";
+
+const gameContainer = document.getElementById("game-container");
+const newGameBtn = document.querySelector(".game-container__reset-btn");
+const gameOverTitle = document.getElementById("game-over-title");
+
+const gameField = document.querySelector(".game-container__field");
+gameField.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, 1fr)`; //размер ячейки
+gameField.style.gridTemplateRows = `repeat(${BOARD_SIZE}, 1fr)`;
+const scoreElement = document.getElementById("score");
+const bestScoreElement = document.getElementById("best-score");
+
+// Достать матрицу из localStorage или создать её
+let gameMatrix;
+if (localStorage.getItem("matrix")) {
+  gameMatrix = JSON.parse(localStorage.getItem("matrix"));
+} else {
+  gameMatrix = Array.from({ length: BOARD_SIZE }, () =>
+    new Array(BOARD_SIZE).fill(0)
+  );
+}
+
+// Достать счёт из localStorage или создать его
+let scoreCounter = +localStorage.getItem("score");
+if (!scoreCounter) {
+  localStorage.setItem("score", 0);
+}
+scoreElement.textContent = localStorage.getItem("score");
+
+let bestScoreCounter = localStorage.getItem("best-score");
+if (!bestScoreCounter) {
+  localStorage.setItem("best-score", 0);
+}
+bestScoreElement.textContent = localStorage.getItem("best-score");
 
 //Ячейки grid
 const initializeGameBoard = () => {
@@ -50,7 +84,8 @@ const getRandomCellCoords = (matrix) => {
 
 const addNumInRandomCell = () => {
   const newCeil = getRandomCellCoords(gameMatrix);
-  gameMatrix[newCeil.row][newCeil.col] = Math.random() > 0.9 ? 4 : 2;
+  gameMatrix[newCeil.row][newCeil.col] =
+    Math.random() > 0.9 ? RARE_NEW_VALUE : COMMON_NEW_VALUE;
 };
 
 const getCellClassNames = (num) => {
@@ -64,9 +99,17 @@ const rerender = () => {
       let ceil = document.getElementById(`ceil_${row}_${col}`);
       let value = gameMatrix[row][col];
       let classes = getCellClassNames(value);
-
       ceil.className = classes;
       ceil.textContent = value || "";
+      ceil.style.width = `${(470 - (BOARD_SIZE - 1) * 15) / BOARD_SIZE}px`;
+      ceil.style.height = `${(470 - (BOARD_SIZE - 1) * 15) / BOARD_SIZE}px`;
+      ceil.style.lineHeight = ceil.style.height;
+      if (BOARD_SIZE > 4) {
+        ceil.style.fontSize = "35px";
+      }
+      if (BOARD_SIZE > 6) {
+        ceil.style.fontSize = "25px";
+      }
     }
   }
 };
@@ -91,8 +134,17 @@ const finishTurn = (originalMatrix, updatedMatrix) => {
   gameMatrix = updatedMatrix;
   moveCell();
 
+  // let content = getComputedStyle(gameContainer, '::after').display;
+
   if (isGameOver(gameMatrix)) {
-    setTimeout(() => alert("Game over!"), 1000);
+    setTimeout(
+      () => {
+        gameOverTitle.textContent = GAMEOVER_TEXT;
+        gameContainer.classList.add("after");
+      },
+
+      1000
+    );
   }
 };
 
@@ -101,11 +153,18 @@ const getGameMAtrixClone = () => {
 };
 
 const increaseScore = (value) => {
-  counter += value;
-  score.textContent = counter;
+  scoreCounter += value;
+  scoreElement.textContent = scoreCounter;
+  localStorage.setItem("score", scoreCounter);
+
+  if (scoreCounter > bestScoreCounter) {
+    bestScoreCounter = scoreCounter;
+    bestScoreElement.textContent = bestScoreCounter;
+    localStorage.setItem("best-score", bestScoreCounter);
+  }
 };
 
-function mergeRow(row) {
+const mergeRow = (row) => {
   for (let i = 0; i < row.length - 1; i++) {
     if (row[i] === row[i - 1]) {
       row[i - 1] *= 2;
@@ -120,9 +179,9 @@ function mergeRow(row) {
   }
 
   return row;
-}
+};
 
-function isGameOver(matrix) {
+const isGameOver = (matrix) => {
   // Проверить возможность объединения двух соседних клеток по горизонтали и вертикали
   for (let row = 0; row < matrix.length; row++) {
     for (let col = 0; col < matrix[row].length; col++) {
@@ -142,12 +201,12 @@ function isGameOver(matrix) {
   }
 
   return true;
-}
+};
 
-function moveCell() {
+const moveCell = () => {
   addNumInRandomCell();
   rerender();
-}
+};
 
 const shakeDat = (originalArr, shouldReverse = false) => {
   let arr = [...originalArr];
@@ -158,19 +217,19 @@ const shakeDat = (originalArr, shouldReverse = false) => {
   return arr;
 };
 
-function moveLeft(matrixClone) {
+const moveLeft = (matrixClone) => {
   for (let row = 0; row < matrixClone.length; row++) {
     matrixClone[row] = shakeDat(matrixClone[row]);
   }
-}
+};
 
-function moveRight(matrixClone) {
+const moveRight = (matrixClone) => {
   for (let row = 0; row < matrixClone.length; row++) {
     matrixClone[row] = shakeDat(matrixClone[row], true);
   }
-}
+};
 
-function moveUp(matrixClone) {
+const moveUp = (matrixClone) => {
   for (let col = 0; col < matrixClone[0].length; col++) {
     let column = [];
     for (let row = 0; row < matrixClone.length; row++) {
@@ -181,9 +240,9 @@ function moveUp(matrixClone) {
       matrixClone[row][col] = column[row];
     }
   }
-}
+};
 
-function moveDown(matrixClone) {
+const moveDown = (matrixClone) => {
   for (let col = 0; col < matrixClone[0].length; col++) {
     let column = [];
     for (let row = 0; row < matrixClone.length; row++) {
@@ -196,7 +255,7 @@ function moveDown(matrixClone) {
       matrixClone[row][col] = column[row];
     }
   }
-}
+};
 
 const move = (event) => {
   if (!AvailableKeysEnum[event.code]) {
@@ -206,7 +265,7 @@ const move = (event) => {
   let matrixClone = getGameMAtrixClone();
 
   switch (event.code) {
-    case AvailableKeysEnum.ArrowLeft:
+    case "ArrowLeft":
       moveLeft(matrixClone);
       break;
     case "ArrowRight":
@@ -221,15 +280,34 @@ const move = (event) => {
   }
 
   finishTurn(gameMatrix, matrixClone);
+  localStorage.setItem("matrix", JSON.stringify(gameMatrix));
 };
 
 const startGame = () => {
-
+  
   initializeGameBoard();
-  addNumInRandomCell();
-  moveCell();
+  if (!localStorage.getItem("matrix")) {
+    addNumInRandomCell();
+    moveCell();
+  } else {
+    rerender();
+  }
 };
 
 startGame();
 
+const isNewGame = () => {
+  let isReload = confirm(
+    "Вы уверены, что хотите начать новую игру? Весь прогресс будет потерян."
+  );
+  if (!isReload) {
+    return false;
+  } else {
+    localStorage.removeItem("score");
+    localStorage.removeItem("matrix");
+    location.reload();
+  }
+};
+
 document.addEventListener("keydown", move);
+newGameBtn.onclick = isNewGame;
