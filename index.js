@@ -5,131 +5,117 @@ const AvailableKeysEnum = {
   ArrowDown: true,
 };
 
-const checkBoardSize = () => {
-  let boardSize;
-  do {
-    boardSize = +prompt("Введите ширину игрового поля от 3 до 8", "4");
-  } while (boardSize < 3 || boardSize > 8);
-
-  localStorage.setItem("board-size", boardSize);
-  return boardSize;
+const StorageItemsEnum = {
+  score: "score",
+  matrix: "matrix",
+  boardSize: "board-size",
+  bestScore: "best-score",
 };
 
 const COMMON_NEW_VALUE = 2;
 const RARE_NEW_VALUE = 4;
-const GAMEOVER_TEXT = "Конец игры!";
+const PROBABILITY_COMMON_NEW_VALUE = 0.9;
 const GAME_BOARD_SIDE_LENGTH = 470;
 const CEIL_GAP = 15;
 const INITIAL_BOARD_SIZE = 4;
 
-const gameContainer = document.getElementById("game-container");
-const newGameBtn = document.getElementById("new-game-btn");
-const gameOverTitle = document.getElementById("game-over-title");
+const createEmptyMatrix = (size) => {
+  return Array.from({ length: size }, () => new Array(size).fill(0));
+};
 
-const storedBoardSize = localStorage.getItem("board-size");
-const storedMatrix = localStorage.getItem("matrix");
-const storedGameOver = localStorage.getItem("game-over");
+const isValidNumber = (num) => {
+  return typeof num === "number" && num !== NaN;
+};
 
-let boardSize = storedBoardSize ? +storedBoardSize : INITIAL_BOARD_SIZE;
-const ceilSideLength = `${
-  (GAME_BOARD_SIDE_LENGTH - (boardSize - 1) * CEIL_GAP) / boardSize
-}px`;
-
-const gameField = document.getElementById("game-field");
-gameField.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`; //размер ячейки
-gameField.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
-const scoreElement = document.getElementById("score");
-const bestScoreElement = document.getElementById("best-score");
-
-const initialValues = () => {
-  const storedValues = {
-    scoreCounter: Number(localStorage.getItem("score")), // 0
-    gameMatrix: JSON.parse(localStorage.getItem("matrix")), // 1 exist, []
-    boardSize: localStorage.getItem("board-size"), // 3-8
-    bestScoreCounter: Number(localStorage.getItem("best-score")),
+const getInitialValues = () => {
+  const defaultValues = {
+    scoreCounter: 0,
+    gameMatrix: createEmptyMatrix(INITIAL_BOARD_SIZE),
+    boardSize: INITIAL_BOARD_SIZE,
+    bestScoreCounter: 0,
   };
 
-  const isScoreCounterValid = typeof storedValues.scoreCounter === "number";
+  const storedValues = {
+    scoreCounter:
+      Number(localStorage.getItem(StorageItemsEnum.score)) ||
+      defaultValues.scoreCounter,
+    gameMatrix: localStorage.getItem(StorageItemsEnum.matrix)
+      ? JSON.parse(localStorage.getItem(StorageItemsEnum.matrix))
+      : defaultValues.gameMatrix,
+    boardSize:
+      Number(localStorage.getItem(StorageItemsEnum.boardSize)) ||
+      defaultValues.boardSize,
+    bestScoreCounter:
+      Number(localStorage.getItem(StorageItemsEnum.bestScore)) ||
+      defaultValues.bestScoreCounter,
+  };
+
+  const { scoreCounter, gameMatrix, boardSize, bestScoreCounter } =
+    storedValues;
+
+  const isScoreCounterValid = isValidNumber(scoreCounter);
+  const isBoardSizeValid = boardSize > 3 || boardSize < 8;
+  const isBestScoreCounterValid = isValidNumber(bestScoreCounter);
   const isGameMatrixValid =
-    storedValues.gameMatrix && Array.isArray(storedValues.gameMatrix);
-  const isBoardSizeValid =
-    storedValues.boardSize > 3 || storedValues.boardSize < 8;
-  const isBestScoreCounterValid =
-    typeof storedValues.bestScoreCounter === "number";
+    Array.isArray(gameMatrix) && gameMatrix.length === boardSize;
 
   const isStoredValuesValid =
     isScoreCounterValid &&
     isGameMatrixValid &&
     isBoardSizeValid &&
     isBestScoreCounterValid;
-  console.log("isStoredValuesValid", isStoredValuesValid);
 
-  if (!storedValues.gameMatrix?.length) {
-    return {
-      scoreCounter: 0,
-      gameMatrix: Array.from({ length: boardSize }, () =>
-        new Array(boardSize).fill(0)
-      ),
-      boardSize: 0,
-      bestScoreCounter: 0,
-    };
+  if (!isStoredValuesValid) {
+    return defaultValues;
   }
 
   return storedValues;
-
-  if (!storedValues) {
-    return {
-      scoreCounter: 0,
-      gameMatrix: Array.from({ length: boardSize }, () =>
-        new Array(boardSize).fill(0)
-      ),
-      boardSize: 0,
-      bestScoreCounter: 0,
-    };
-  } else {
-    return storedValues;
-  }
 };
 
-console.log(">>>>>>>>>>>>", initialValues());
+let { scoreCounter, gameMatrix, boardSize, bestScoreCounter } =
+  getInitialValues();
 
-// Достать матрицу из localStorage или создать её
-let gameMatrix;
+const gameContainer = document.getElementById("game-container");
+const newGameBtn = document.getElementById("new-game-btn");
+const gameOverTitle = document.getElementById("game-over-title");
+const gameField = document.getElementById("game-field");
+const scoreElement = document.getElementById(StorageItemsEnum.score);
+const bestScoreElement = document.getElementById(StorageItemsEnum.bestScore);
 
-if (storedMatrix) {
-  gameMatrix = JSON.parse(storedMatrix);
-} else {
-  gameMatrix = Array.from({ length: boardSize }, () =>
-    new Array(boardSize).fill(0)
-  );
-}
+const ceilSideLength = `${
+  (GAME_BOARD_SIDE_LENGTH - (boardSize - 1) * CEIL_GAP) / boardSize
+}px`;
+const ceilSideTemplate = `repeat(${boardSize}, 1fr)`;
 
-//Достать счёт из localStorage или создать его
-let scoreCounter = +localStorage.getItem("score");
-if (!scoreCounter) {
-  localStorage.setItem("score", 0);
-}
-scoreElement.textContent = localStorage.getItem("score");
+gameField.style.gridTemplateColumns = ceilSideTemplate;
+gameField.style.gridTemplateRows = ceilSideTemplate;
 
-let bestScoreCounter = localStorage.getItem("best-score");
-if (!bestScoreCounter) {
-  localStorage.setItem("best-score", 0);
-}
-bestScoreElement.textContent = localStorage.getItem("best-score");
+scoreElement.textContent = scoreCounter;
+bestScoreElement.textContent = bestScoreCounter;
+
+const askBoardSize = () => {
+  let boardSize;
+  do {
+    boardSize = +prompt("Введите ширину игрового поля от 3 до 8", "4");
+  } while (boardSize < 3 || boardSize > 8);
+
+  localStorage.setItem(StorageItemsEnum.boardSize, boardSize);
+  return boardSize;
+};
 
 //Ячейки grid
 const initializeGameBoard = () => {
   for (let row = 0; row < gameMatrix.length; row++) {
     for (let col = 0; col < gameMatrix[row].length; col++) {
       const ceil = document.createElement("div");
-      ceil.classList.add("game-container__cell");
+      ceil.classList.add("game-container__ceil");
       ceil.setAttribute("id", `ceil_${[row]}_${[col]}`);
       gameField.append(ceil);
     }
   }
 };
 
-const getRandomCellCoords = (matrix) => {
+const getRandomCeilCoords = (matrix) => {
   const newArr = [];
   matrix.forEach((row, indexRow) => {
     row.forEach((col, indexCol) => {
@@ -146,14 +132,19 @@ const getRandomCellCoords = (matrix) => {
   return randomItem;
 };
 
-const addNumInRandomCell = () => {
-  const newCeil = getRandomCellCoords(gameMatrix);
+const addNumInRandomCeil = () => {
+  const newCeil = getRandomCeilCoords(gameMatrix);
   gameMatrix[newCeil.row][newCeil.col] =
-    Math.random() > 0.9 ? RARE_NEW_VALUE : COMMON_NEW_VALUE;
+    Math.random() > PROBABILITY_COMMON_NEW_VALUE
+      ? RARE_NEW_VALUE
+      : COMMON_NEW_VALUE;
 };
 
-const getCellClassNames = (num) => {
-  return `game-container__cell_title game-container__cell_title_${num}`;
+const getCeilClassNames = (num) => {
+  if (num > 1024) {
+    return "game-container__ceil_title game-container__ceil_title_big-num";
+  }
+  return `game-container__ceil_title game-container__ceil_title_${num}`;
 };
 
 // Перерисовка поля при кажом изменении
@@ -162,7 +153,7 @@ const rerender = () => {
     for (let col = 0; col < gameMatrix[row].length; col++) {
       const ceil = document.getElementById(`ceil_${row}_${col}`);
       const value = gameMatrix[row][col];
-      const classes = getCellClassNames(value);
+      const classes = getCeilClassNames(value);
       ceil.className = classes;
       ceil.textContent = value || "";
       ceil.style.width = ceilSideLength;
@@ -172,7 +163,7 @@ const rerender = () => {
         ceil.style.fontSize = "35px";
       }
       if (boardSize > 6) {
-        ceil.style.fontSize = "25px";
+        ceil.style.fontSize = "22px";
       }
     }
   }
@@ -190,8 +181,8 @@ const isGameValuesChanged = (originalMatrix, updatedMatrix) => {
   return JSON.stringify(originalMatrix) !== JSON.stringify(updatedMatrix);
 };
 
-const setGameOver = () => {
-  gameOverTitle.textContent = GAMEOVER_TEXT;
+const showGameOverLayout = () => {
+  gameOverTitle.style.display = "block";
   gameContainer.classList.add("after");
 };
 
@@ -201,26 +192,28 @@ const finishTurn = (originalMatrix, updatedMatrix) => {
   }
 
   gameMatrix = updatedMatrix;
-  moveCell();
+  addNumAndRerender();
 
-  if (isGameOver(gameMatrix)) {
-    setGameOver();
+  if (!isGameOver(gameMatrix)) {
+    return;
   }
+
+  showGameOverLayout();
 };
 
-const getGameMAtrixClone = () => {
+const getGameMatrixClone = () => {
   return JSON.parse(JSON.stringify(gameMatrix));
 };
 
 const increaseScore = (value) => {
   scoreCounter += value;
   scoreElement.textContent = scoreCounter;
-  localStorage.setItem("score", scoreCounter);
+  localStorage.setItem(StorageItemsEnum.score, scoreCounter);
 
   if (scoreCounter > bestScoreCounter) {
     bestScoreCounter = scoreCounter;
     bestScoreElement.textContent = bestScoreCounter;
-    localStorage.setItem("best-score", bestScoreCounter);
+    localStorage.setItem(StorageItemsEnum.bestScore, bestScoreCounter);
   }
 };
 
@@ -259,12 +252,12 @@ const isGameOver = (matrix) => {
       }
     }
   }
-  localStorage.setItem("game-over", "true");
+
   return true;
 };
 
-const moveCell = () => {
-  addNumInRandomCell();
+const addNumAndRerender = () => {
+  addNumInRandomCeil();
   rerender();
 };
 
@@ -322,7 +315,7 @@ const handleKeydown = (event) => {
     return;
   }
 
-  let matrixClone = getGameMAtrixClone();
+  let matrixClone = getGameMatrixClone();
 
   switch (event.code) {
     case "ArrowLeft":
@@ -340,24 +333,22 @@ const handleKeydown = (event) => {
   }
 
   finishTurn(gameMatrix, matrixClone);
-  localStorage.setItem("matrix", JSON.stringify(gameMatrix));
+  localStorage.setItem(StorageItemsEnum.mat, JSON.stringify(gameMatrix));
 };
 
 const startGame = () => {
   initializeGameBoard();
-  if (!storedMatrix) {
-    addNumInRandomCell();
-    moveCell();
+
+  const isStoredMatrixEmpty = !gameMatrix.flat().filter((e) => e).length;
+
+  if (isStoredMatrixEmpty) {
+    addNumInRandomCeil();
+    addNumAndRerender();
   } else {
     rerender();
   }
 };
 
-const startBoard = () => {
-  initializeGameBoard();
-
-  rerender();
-};
 const handleNewGameClick = () => {
   if (!isGameOver(gameMatrix)) {
     let isRestart = confirm(
@@ -368,20 +359,22 @@ const handleNewGameClick = () => {
     }
   }
 
-  localStorage.removeItem("score");
-  localStorage.removeItem("board-size");
-  localStorage.removeItem("matrix");
-  localStorage.removeItem("game-over");
+  localStorage.removeItem(StorageItemsEnum.score);
+  localStorage.removeItem(StorageItemsEnum.boardSize);
+  localStorage.removeItem(StorageItemsEnum.matrix);
   location.reload();
 
-  checkBoardSize();
+  const newBoardSize = askBoardSize();
+  boardSize = newBoardSize;
+  gameMatrix = createEmptyMatrix(boardSize);
+  localStorage.setItem(StorageItemsEnum.matrix, JSON.stringify(gameMatrix));
 };
 
-if (storedGameOver) {
-  setGameOver();
+if (isGameOver(gameMatrix)) {
+  showGameOverLayout();
 }
 
-!storedBoardSize ? startBoard() : startGame();
+startGame();
 
 document.addEventListener("keydown", handleKeydown);
 newGameBtn.onclick = handleNewGameClick;

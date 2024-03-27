@@ -1,6 +1,6 @@
 body {
   font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
-  background-color: rgb(255, 255, 243); 
+  background-color: rgb(255, 255, 243);
 }
 
 .container {
@@ -33,7 +33,6 @@ body {
   list-style-type: none;
 }
 
-
 .game-container {
   width: 500px;
   height: 500px;
@@ -62,6 +61,7 @@ body {
 }
 
 .game-container__game-over-title {
+  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -73,7 +73,7 @@ body {
   margin: 0;
 }
 
-.game-container__cell_title {
+.game-container__ceil_title {
   border-radius: 3px;
   font-size: 50px;
   font-weight: 700;
@@ -82,49 +82,57 @@ body {
   background: rgba(238, 228, 218, 0.35);
 }
 
-.game-container__scores-title {
+.heading__scores-title {
   margin-bottom: 10px;
   border: 1px solid #d1c8c1;
   padding: 5px 10px;
   border-radius: 3px;
 }
 
-.game-container__scores-counter {
+.heading__scores-counter {
   font-size: 25px;
   text-align: center;
 }
 
-.game-container__cell_title_2 {
+.game-container__ceil_title_2 {
   background-color: beige;
 }
 
-.game-container__cell_title_4 {
+.game-container__ceil_title_4 {
   background-color: rgb(247, 219, 172);
 }
-.game-container__cell_title_8 {
+.game-container__ceil_title_8 {
   background-color: rgb(252, 195, 96);
 }
-.game-container__cell_title_16 {
+.game-container__ceil_title_16 {
   background-color: rgb(214, 136, 0);
 }
-.game-container__cell_title_32 {
+.game-container__ceil_title_32 {
   background-color: rgb(255, 123, 15);
 }
 
-.game-container__cell_title_64 {
+.game-container__ceil_title_64 {
   background-color: rgb(218, 80, 0);
 }
 
-.game-container__cell_title_128 {
+.game-container__ceil_title_128 {
   background-color: rgb(233, 213, 34);
 }
 
-.game-container__cell_title_256 {
+.game-container__ceil_title_256 {
   background-color: rgb(212, 192, 12);
 }
 
-.game-container__cell_title_512 {
+.game-container__ceil_title_512 {
   background-color: rgb(199, 212, 12);
+}
+
+.game-container__ceil_title_1024 {
+  background-color: rgb(0, 215, 223);
+}
+
+.game-container__ceil_title_big-num {
+  background-color: rgb(0, 151, 238);
 }
 
 .game-container__new-game-btn {
@@ -142,4 +150,3 @@ body {
   cursor: pointer;
   opacity: 0.9;
 }
-
