@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2048</title>
+  <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="heading">
+      <h1 class="heading__title">2048</h1>
+      <div class="heading__container">
+        <ul class="heading__score-bar">
+          <li class="heading__scores">
+            <h2 class="heading__scores-title">Cчёт</h2>
+            <div class="heading__scores-counter" id="score"></div>
+          </li>
+          <li class="heading__scores">
+            <h2 class="heading__scores-title">Рекорд</h2>
+            <div class="heading__scores-counter" id="best-score"></div>
+          </li>
+        </ul>
+        <button class="game-container__new-game-btn" id="new-game-btn">Новая игра</button>
+      </div>
+    </div>
+    <div class="game-container" id="game-container">
+      <p class="game-container__game-over-title" id="game-over-title">Конец игры!</p>
+      <div class="game-container__field" id="game-field"></div>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+
+</html>
